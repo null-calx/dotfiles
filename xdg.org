@@ -1,0 +1,13 @@
+#+BEGIN_SRC sh
+  xdg-settings set default-web-browser librewolf.desktop
+  xdg-mime default pcmanfm.desktop inode/directory
+  xdg-mime default feh.desktop image/jpeg
+  xdg-mime default feh.desktop image/png
+  xdg-mime default feh.desktop image/gif
+  xdg-mime default feh.desktop image/jpg
+  xdg-mime default feh.desktop image/webp
+#+END_SRC
+
+#+BEGIN_SRC sh
+cat .config/mimeapps.list
+#+END_SRC

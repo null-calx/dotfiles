@@ -1,0 +1,10 @@
+[user]
+	name = calx
+	email = 108835591+null-calx@users.noreply.github.com
+	signingkey = 108835591+null-calx@users.noreply.github.com
+[core]
+	editor = vim
+[commit]
+	gpgsign = true
+[tag]
+	gpgSign = true
