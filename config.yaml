@@ -1,0 +1,52 @@
+configurationBlocks:
+  - tool: alacritty
+    name: alacritty.toml
+    base: config
+
+  - tool: dunst
+    name: dunst
+    base: config
+
+  - tool: gdb
+    name: gdbinit
+    base: home
+    dest: .gdbinit
+
+  - tool: git
+    name: gitconfig
+    base: home
+    dest: .gitconfig
+
+  - tool: gpg
+    name: gpg.conf
+    base: home
+    fold: .gnupg
+
+  - tool: picom
+    name: picom.conf
+    base: config
+
+  - tool: rofi
+    name: config.rasi
+    base: config
+    fold: rofi
+
+  - tool: sbcl
+    name: sbclrc
+    base: home
+    dest: .sbclrc
+
+  - tool: user profile
+    name: profile
+    base: home
+    dest: .profile
+
+  - tool: xinit
+    name: xinitrc
+    base: home
+    dest: .xinitrc
+
+  - tool: zsh
+    name: zshrc
+    base: home
+    dest: .zshrc
