@@ -36,13 +36,14 @@ resolve_target() {
 process_git_repo_block() {
     declare -r git_repo="$1"
     declare -r target_directory="$2"
+    declare -r remote="$3"
 
     echo "  ensuring directory ${target_directory}"
     mkdir -p "$target_directory"
 
     if [[ -d "${target_directory}.git" ]]; then
 	echo "  checking remote url for ${target_directory}"
-	remote_url=$(git -C "$target_directory" remote get-url origin)
+	remote_url=$(git -C "$target_directory" remote get-url "$remote")
 	if [[ "$remote_url" != "$git_repo" ]]; then
 	    echo "ERROR: remote_url: ${remote_url} didn't match intended url: ${git_repo}"
 	    exit 1
@@ -55,12 +56,15 @@ process_git_repo_block() {
 
 yq '.gitRepoBlocks[] | @json' config.yaml | while read -r block; do
     tool_name=$(echo "$block" | yq ".tool")
+
     repo=$(echo "$block" | yq ".repo")
     base=$(echo "$block" | yq ".base")
     fold=$(echo "$block" | yq '.fold')
 
+    remote=$(echo "$block" | yq '.remote // "origin"')
+
     echo "configuring ${tool_name}"
-    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")"
+    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")" "$remote"
     echo
 done
 
@@ -81,6 +85,7 @@ process_configuration_block() {
 
 yq '.configurationBlocks[] | @json' config.yaml | while read -r block; do
     tool_name=$(echo "$block" | yq ".tool")
+
     name=$(echo "$block" | yq ".name")
     base=$(echo "$block" | yq ".base")
     dest=$(echo "$block" | yq '.dest // ""')
