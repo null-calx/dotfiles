@@ -4,15 +4,27 @@ gitRepoBlocks:
     base: git
     fold: stumpwm
 
+    ensure-latest: true
+    build: |
+      ./autogen.sh
+      ./configure
+      make
+
   - tool: stumpwm-contrib
     repo: https://github.com/stumpwm/stumpwm-contrib.git
     base: git
     fold: stumpwm-contrib
 
+    ensure-latest: true
+
   - tool: stumpwm-config
     repo: git@github.com:null-calx/stumpwm-config.git
     base: projects
     fold: stumpwm-config
+
+    ensure-latest: true
+    build: |
+      make
 
   - tool: baymax
     repo: git@github.com:null-calx/baymax.git

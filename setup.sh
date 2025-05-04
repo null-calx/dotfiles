@@ -37,8 +37,9 @@ process_git_repo_block() {
     declare -r git_repo="$1"
     declare -r target_directory="$2"
     declare -r remote="$3"
+    declare -r ensure_latest="$4"
+    declare -r build_cmd="$5"
 
-    echo "  ensuring directory ${target_directory}"
     mkdir -p "$target_directory"
 
     if [[ -d "${target_directory}.git" ]]; then
@@ -52,6 +53,18 @@ process_git_repo_block() {
 	echo "  cloning ${git_repo} into ${target_directory}"
 	git clone "$git_repo" "$target_directory"
     fi
+
+    if [[ "$ensure_latest" == "true" ]]; then
+	echo "  pulling latest changes"
+	git -C "$target_directory" pull "$remote"
+    fi
+
+    if [[ -n "$build_cmd" ]]; then
+	echo "  building"
+	pushd "$target_directory"
+	bash -c "$build_cmd"
+	popd
+    fi
 }
 
 yq '.gitRepoBlocks[] | @json' config.yaml | while read -r block; do
@@ -62,9 +75,11 @@ yq '.gitRepoBlocks[] | @json' config.yaml | while read -r block; do
     fold=$(echo "$block" | yq '.fold')
 
     remote=$(echo "$block" | yq '.remote // "origin"')
+    ensure_latest=$(echo "$block" | yq '.ensure-latest // "false"')
+    build_cmd=$(echo "$block" | yq '.build // ""')
 
     echo "configuring ${tool_name}"
-    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")" "$remote"
+    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")" "$remote" "$ensure_latest" "$build_cmd"
     echo
 done
 
@@ -76,7 +91,6 @@ process_configuration_block() {
     source_full_filename="${config_directory}${source_filename}"
     target_full_filename="${target_directory}${target_filename}"
 
-    echo "  ensuring directory ${target_directory}"
     mkdir -p "$target_directory"
 
     echo "  linking ${source_full_filename} <- ${target_full_filename}"
