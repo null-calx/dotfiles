@@ -39,6 +39,7 @@ process_git_repo_block() {
     declare -r remote="$3"
     declare -r ensure_latest="$4"
     declare -r build_cmd="$5"
+    declare -r symlinks="$6"
 
     mkdir -p "$target_directory"
 
@@ -51,37 +52,33 @@ process_git_repo_block() {
 	fi
     else
 	echo "  cloning ${git_repo} into ${target_directory}"
-	git clone "$git_repo" "$target_directory"
+	echo git clone "$git_repo" "$target_directory"
     fi
 
     if [[ "$ensure_latest" == "true" ]]; then
 	echo "  pulling latest changes"
-	git -C "$target_directory" pull "$remote"
+	echo git -C "$target_directory" pull "$remote"
     fi
 
     if [[ -n "$build_cmd" ]]; then
 	echo "  building"
 	pushd "$target_directory"
-	bash -c "$build_cmd"
+	echo bash -c "$build_cmd"
 	popd
     fi
+
+    if [[ -n "$symlinks" ]]; then
+	echo "  creating symlinks"
+	echo "$symlinks" | yq '.[] | @json' | while read -r block; do
+	    name=$(echo "$block" | yq ".name")
+	    base=$(echo "$block" | yq ".base")
+	    dest=$(echo "$block" | yq '.dest // ""')
+	    fold=$(echo "$block" | yq '.fold // ""')
+
+	    config_directory="$target_directory" process_configuration_block "$name" "$(resolve_target "$base" "$fold")" "$dest"
+	done
+    fi
 }
-
-yq '.gitRepoBlocks[] | @json' config.yaml | while read -r block; do
-    tool_name=$(echo "$block" | yq ".tool")
-
-    repo=$(echo "$block" | yq ".repo")
-    base=$(echo "$block" | yq ".base")
-    fold=$(echo "$block" | yq '.fold')
-
-    remote=$(echo "$block" | yq '.remote // "origin"')
-    ensure_latest=$(echo "$block" | yq '.ensure-latest // "false"')
-    build_cmd=$(echo "$block" | yq '.build // ""')
-
-    echo "configuring ${tool_name}"
-    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")" "$remote" "$ensure_latest" "$build_cmd"
-    echo
-done
 
 process_configuration_block() {
     declare -r source_filename="$1"
@@ -96,6 +93,23 @@ process_configuration_block() {
     echo "  linking ${source_full_filename} <- ${target_full_filename}"
     ln -sf "$source_full_filename" "$target_full_filename"
 }
+
+yq '.gitRepoBlocks[] | @json' config.yaml | while read -r block; do
+    tool_name=$(echo "$block" | yq ".tool")
+
+    repo=$(echo "$block" | yq ".repo")
+    base=$(echo "$block" | yq ".base")
+    fold=$(echo "$block" | yq '.fold')
+
+    remote=$(echo "$block" | yq '.remote // "origin"')
+    ensure_latest=$(echo "$block" | yq '.ensure-latest // "false"')
+    build_cmd=$(echo "$block" | yq '.build // ""')
+    symlinks=$(echo "$block" | yq '.symlinks // ""')
+
+    echo "configuring ${tool_name}"
+    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")" "$remote" "$ensure_latest" "$build_cmd" "$symlinks"
+    echo
+done
 
 yq '.configurationBlocks[] | @json' config.yaml | while read -r block; do
     tool_name=$(echo "$block" | yq ".tool")

@@ -1,0 +1,5 @@
+#+TITLE: dotfiles
+#+AUTHOR: calx
+
+this projects sets up all the configuration files and git repositories
+i need on a system

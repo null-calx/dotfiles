@@ -1,4 +1,17 @@
 gitRepoBlocks:
+  # - tool: name of the tool to clone (required)
+  #   repo: git remote url to cloen (required)
+  #   base: some common folders to create the symlink into (like home, config, git, projects) (required)
+  #   fold: the folder to clone into (required)
+  #   remote: the git remote to use (optional) (default = "origin")
+  #   ensure-latest: (bool) should pull latest? (optional) (default = false)
+  #   build: instructions to build the repo (optional)
+  #   symlinks:
+  #     - name: filename in clone repo directory (required)
+  #       base: some common folders to create the symlink into (like home, config, git, projects) (required)
+  #       fold: any subfolder inside base (optional)
+  #       dest: destination filename of the symlink (optional) (default = name)
+
   - tool: stumpwm
     repo: https://github.com/stumpwm/stumpwm
     base: git
@@ -16,6 +29,11 @@ gitRepoBlocks:
     fold: stumpwm-contrib
 
     ensure-latest: true
+    symlinks:
+      - name: "" # the current directory, dunno why "." fails when ran twice
+        base: home
+        fold: .stumpwm.d
+        dest: modules
 
   - tool: stumpwm-config
     repo: git@github.com:null-calx/stumpwm-config.git
@@ -25,11 +43,26 @@ gitRepoBlocks:
     ensure-latest: true
     build: |
       make
+    symlinks:
+      - name: init.lisp
+        base: home
+        fold: .stumpwm.d
 
   - tool: baymax
     repo: git@github.com:null-calx/baymax.git
     base: projects
     fold: baymax
+
+    symlinks:
+      - name: init.el
+        base: home
+        fold: .emacs.d
+      - name: emacs-custom.el
+        base: home
+        fold: .emacs.d
+      - name: config.org
+        base: home
+        fold: .emacs.d
 
   - tool: readelf
     repo: git@github.com:null-calx/readelf.git
@@ -37,6 +70,12 @@ gitRepoBlocks:
     fold: readelf
 
 configurationBlocks:
+  # - tool: name of the tool to configure (required)
+  #   name: filename in ./config directory (required)
+  #   base: some common folders to create the symlink into (like home, config, git, projects) (required)
+  #   fold: any subfolder inside base (optional)
+  #   dest: destination filename of the symlink (optional) (default = name)
+
   - tool: alacritty
     name: alacritty.toml
     base: config
