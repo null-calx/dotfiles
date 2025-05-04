@@ -1,56 +1,92 @@
-#!/bin/sh
+#!/bin/bash
 
 set -euo pipefail
 
 current_directory=$(pwd)
 config_directory="${current_directory}/config/"
 
-user_home="$HOME/"
-config_home="$HOME/.config/"
+resolve_target() {
+    declare -r target_type="$1"
+    declare -r target_input="$2"
 
-process_block() {
-    declare -r tool_name="$1"
-    declare -r config_filename="$2"
-    declare -r destination_type="$3"
-    declare -r destination_name="${4:-$config_filename}"
-    declare -r destination_dir_input="$5"
-
-    echo "configuring ${tool_name}"
-
-    source_filename="${config_directory}${config_filename}"
-
-    case "$destination_type" in
+    case "$target_type" in
 	home)
-	    config_dir="${user_home}"
+	    base="${HOME}/"
 	    ;;
 	config)
-	    config_dir="${config_home}"
+	    base="${HOME}/.config/"
+	    ;;
+	git)
+	    base="${HOME}/git/"
+	    ;;
+	projects)
+	    base="${HOME}/projects/"
 	    ;;
     esac
 
-    if [[ -n "$destination_dir_input" ]]; then
-	local destination_dir="${config_dir}${destination_dir_input}/"
+    if [[ -n "$target_input" ]]; then
+	final_target="${base}${target_input}/"
     else
-	local destination_dir="${config_dir}"
+	final_target="${base}"
     fi
 
-    destination_filename="${destination_dir}${destination_name}"
+    echo "$final_target"
+}
 
-    echo "  making directories ${destination_dir}"
-    mkdir -p "$destination_dir"
+process_git_repo_block() {
+    declare -r git_repo="$1"
+    declare -r target_directory="$2"
 
-    echo "  linking ${source_filename} to ${destination_filename}"
-    ln -sf "$source_filename" "$destination_filename"
+    echo "  ensuring directory ${target_directory}"
+    mkdir -p "$target_directory"
 
+    if [[ -d "${target_directory}.git" ]]; then
+	echo "  checking remote url for ${target_directory}"
+	remote_url=$(git -C "$target_directory" remote get-url origin)
+	if [[ "$remote_url" != "$git_repo" ]]; then
+	    echo "ERROR: remote_url: ${remote_url} didn't match intended url: ${git_repo}"
+	    exit 1
+	fi
+    else
+	echo "  cloning ${git_repo} into ${target_directory}"
+	git clone "$git_repo" "$target_directory"
+    fi
+}
+
+yq '.gitRepoBlocks[] | @json' config.yaml | while read -r block; do
+    tool_name=$(echo "$block" | yq ".tool")
+    repo=$(echo "$block" | yq ".repo")
+    base=$(echo "$block" | yq ".base")
+    fold=$(echo "$block" | yq '.fold')
+
+    echo "configuring ${tool_name}"
+    process_git_repo_block "$repo" "$(resolve_target "$base" "$fold")"
     echo
+done
+
+process_configuration_block() {
+    declare -r source_filename="$1"
+    declare -r target_directory="$2"
+    declare -r target_filename="${3:-$source_filename}"
+
+    source_full_filename="${config_directory}${source_filename}"
+    target_full_filename="${target_directory}${target_filename}"
+
+    echo "  ensuring directory ${target_directory}"
+    mkdir -p "$target_directory"
+
+    echo "  linking ${source_full_filename} <- ${target_full_filename}"
+    ln -sf "$source_full_filename" "$target_full_filename"
 }
 
 yq '.configurationBlocks[] | @json' config.yaml | while read -r block; do
-    tool=$(echo "$block" | yq .tool)
-    name=$(echo "$block" | yq .name)
-    base=$(echo "$block" | yq .base)
+    tool_name=$(echo "$block" | yq ".tool")
+    name=$(echo "$block" | yq ".name")
+    base=$(echo "$block" | yq ".base")
     dest=$(echo "$block" | yq '.dest // ""')
     fold=$(echo "$block" | yq '.fold // ""')
 
-    process_block "$tool" "$name" "$base" "$dest" "$fold"
+    echo "configuring ${tool_name}"
+    process_configuration_block "$name" "$(resolve_target "$base" "$fold")" "$dest"
+    echo
 done

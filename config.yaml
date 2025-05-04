@@ -1,3 +1,29 @@
+gitRepoBlocks:
+  - tool: stumpwm
+    repo: https://github.com/stumpwm/stumpwm
+    base: git
+    fold: stumpwm
+
+  - tool: stumpwm-contrib
+    repo: https://github.com/stumpwm/stumpwm-contrib.git
+    base: git
+    fold: stumpwm-contrib
+
+  - tool: stumpwm-config
+    repo: git@github.com:null-calx/stumpwm-config.git
+    base: projects
+    fold: stumpwm-config
+
+  - tool: baymax
+    repo: git@github.com:null-calx/baymax.git
+    base: projects
+    fold: baymax
+
+  - tool: readelf
+    repo: git@github.com:null-calx/readelf.git
+    base: projects
+    fold: readelf
+
 configurationBlocks:
   - tool: alacritty
     name: alacritty.toml
