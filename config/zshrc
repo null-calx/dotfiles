@@ -17,4 +17,11 @@ PS1="%F{blue}%n%f %F{green}%~%f %% "
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 
+mkcd() {
+    if [[ -n "$1" ]]; then
+	mkdir -p "$1"
+	cd "$1"
+    fi
+}
+
 . ~/.profile
