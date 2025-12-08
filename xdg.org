@@ -9,6 +9,10 @@
   xdg-mime default mpv.desktop video/webm
   xdg-mime default mpv.desktop audio/flac
   xdg-mime default org.pwmt.zathura.desktop application/pdf
+  xdg-mime default mpv.desktop audio/mp3
+  xdg-mime default mpv.desktop audio/ogg
+  xdg-mime default mpv.desktop audio/mpeg
+
 #+END_SRC
 
 #+BEGIN_SRC sh
