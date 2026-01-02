@@ -63,6 +63,9 @@ gitRepoBlocks:
       - name: config.org
         base: home
         fold: .emacs.d
+      - name: local
+        base: home
+        fold: .emacs.d
 
   - tool: readelf
     repo: git@github.com:null-calx/readelf.git

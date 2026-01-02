@@ -1,0 +1,400 @@
+#+TITLE: Arch Linux
+#+AUTHOR: calx
+
+* Install steps
+
+1. Test internet
+
+   #+BEGIN_SRC sh
+     ping istaroth.org
+   #+END_SRC
+
+2. Set time
+
+   #+BEGIN_SRC sh
+     timedatectl set-ntp true
+   #+END_SRC
+
+3. Create disk partitions
+
+   Main disk is ~/dev/nvme0n1~
+
+   #+BEGIN_SRC sh
+     fdisk /dev/nvme0n1
+   #+END_SRC
+
+   #+BEGIN_EXAMPLE
+     m <enter> (help)
+     n <enter> (new partition)
+     p <enter> (primary)
+     <enter> (partition number 1)
+     <enter> (first sector 2048)
+     +1G <enter> (partition size = 1G)
+     n <enter> (new partition)
+     p <enter> (primary)
+     <enter> (partition number 2)
+     <enter> (first sector ??)
+     <enter> (last sector at the end)
+     w <enter> (write partition table)
+   #+END_EXAMPLE
+
+4. Format disk partitions
+
+   #+BEGIN_SRC sh
+     mkfs.fat -F 32 /dev/nvme0n1p1
+     mkfs.ext4 /dev/nvme0n1p2
+   #+END_SRC
+
+5. Mount partitions
+
+   #+BEGIN_SRC sh
+     mount /dev/nvme0n1p2 /mnt
+     mkdir -p /mnt/boot/efi
+     mount /dev/nvme0n1p1 /mnt/boot/efi
+   #+END_SRC
+
+6. ~pacstrap~ magic
+
+   #+BEGIN_SRC sh
+     pacstrap -K /mnt <packages>
+   #+END_SRC
+
+7. Create ~fstab~ file
+
+   #+BEGIN_SRC sh
+     genfstab -U /mnt >> /mnt/etc/fstab
+   #+END_SRC
+
+8. Chroot
+
+   #+BEGIN_SRC sh
+     arch-chroot /mnt
+   #+END_SRC
+
+   1. Enable Network Manager
+
+      #+BEGIN_SRC sh
+        systemctl enable NetworkManager
+      #+END_SRC
+
+   2. Grub install
+
+      #+BEGIN_SRC sh
+        grub-install /dev/nmve0n1
+        grub-mkconfig -o /boot/grub/grub.cfg
+      #+END_SRC
+
+   3. Locale and Timezone setup
+
+      #+BEGIN_SRC sh
+        ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
+      #+END_SRC
+
+      #+BEGIN_EXAMPLE
+        uncomment 'en_US.UTF-8' in /etc/locale.gen
+      #+END_EXAMPLE
+
+      #+BEGIN_SRC sh
+        echo 'LANG=en_US.UTF-8' > /etc/locale.conf
+        locale-gen
+      #+END_SRC
+
+   4. Hostname
+
+      #+BEGIN_SRC sh
+        echo archbox > /etc/hostname
+      #+END_SRC
+
+   5. User setup
+
+      #+BEGIN_SRC sh
+        useradd -mG wheel user
+      #+END_SRC
+
+   6. Root and user passwords
+
+      #+BEGIN_SRC sh
+        passwd
+        passwd user
+      #+END_SRC
+
+   7. Sudo access
+
+      #+BEGIN_EXAMPLE
+        uncomment '%wheel ALL=(ALL:ALL) ALL' in /etc/sudoers
+      #+END_EXAMPLE
+
+   8. Keyboard Setup
+
+      #+BEGIN_SRC sh
+        localectl set-x11-keymap us "" "" ctrl:swapcaps
+      #+END_SRC
+
+   9. Xinit
+
+      #+BEGIN_SRC sh
+        su user
+        cd
+        echo exec <path-to-window-manager> > .xinitrc
+      #+END_SRC
+
+* Package List
+
+** System dependencies
+
+- base
+- base-devel
+- efibootmgr
+- grub
+- linux
+- linux-firmware
+- linux-headers
+
+** User essentials
+
+*** misc
+
+- alacritty
+- bashtop
+- brightnessctl
+- btop
+- dunst
+- fasm
+- fastfetch
+- git
+- glxgears
+- htop
+- lf
+- lsof
+- mpv-mpris
+- network-manager-applet
+- opentofu
+- picom
+- playerctl
+- powertop
+- rofi
+- scrot
+- usbutils
+- zsh
+
+*** xserver
+
+- arandr
+- xclip
+- xdotool
+- xorg-server
+- xorg-xhost
+- xorg-xmessage
+- xorg-xprop
+- xorg-xrandr
+- xorg-xsetroot
+- xsecurelock
+
+*** apps/browsers
+
+- bitwarden
+- blender
+- chromium
+- discord
+- firefox
+- gimp
+- hexchat
+- krita
+- qutebrowser
+- signal-desktop
+- torbrowswer-launcher
+
+*** editors
+
+- emacs
+- vim
+
+*** network tools
+
+- aria2
+- bind
+- darkhttpd
+- i2p
+- netcat
+- networkmanager
+- nmap
+- rsync
+- sshfs
+- tor
+- torsocks
+- traceroute
+- wget
+- wireguard-tools
+- wireshark-qt
+- yt-dlp
+
+*** file tools
+
+- 7zip
+- bat
+- feh
+- imagemagick
+- mpv
+- pcmanfm
+- unzip
+- xarchiver
+- zathura
+- zathura-cb
+- zathura-djvu
+- zathura-pdf-mupdf
+- zathura-ps
+- zip
+
+*** dev tools
+
+- arm-none-eabi-gcc
+- arm-none-eabi-newlib
+- bear
+- cmake
+- deno
+- fzf
+- go
+- go-tools
+- go-yq
+- gopls
+- jq
+- man-db
+- man-pages
+- minicom
+- nodejs
+- podman
+- podman-compose
+- python-virtualenv
+- quicklisp
+- rlwrap
+- sbcl
+- scrcpy
+- texinfo
+- texlive
+- z3
+
+*** reversing tools
+
+- gdb
+- gef
+- strace
+
+*** virtualization tools
+
+- dmidecode
+- dnsmasq
+- qemu-full
+- virt-manager
+
+*** audio tools
+
+- alsa-utils
+- audacity
+- bluez
+- bluez-utils
+- pavucontrol
+- pipewire-alsa
+- pipewire-pulse
+- /pulseaudio
+- /pulseaudio-alsa
+- /pulseaudio-bluetooth
+
+*** radio tools
+
+- gnuradio
+- gnuradio-companion
+- gnuradio-docs
+- gnuradio-examples
+- gnuradio-iqbal
+- gnuradio-osmodor
+- gnuradio-utils
+
+*** yubikey tools
+
+- libfido2
+- pam-u2f
+- gnupg
+- pcsclite
+- ccid
+- yubikey-personalization
+- yubikey-personalization-gui
+
+** Font packages
+
+- cantarell-fonts
+- gnu-free-fonts
+- noto-fonts
+- noto-fonts-cjk
+- noto-fonts-emoji
+- noto-fonts-extra
+- ttf-bitstream-vera
+- ttf-croscore
+- ttf-dejavu
+- ttf-droid
+
+All packages for nerd-fonts
+- nerd-fonts
+
+** Misc packages
+
+- resolvconf (openresolv) -- required by wg-quick
+- sdl2_ttf -- for sketch library in lisp
+- stumpwm -- for testing
+- stumpwm-contrib
+- mtpfs -- for android file transfers
+- ispell
+- aspell
+- android-tools
+
+** AUR packages
+
+- trizen
+
+The rest of the packages
+- golly
+- librewolf-bin
+- opentabletdriver
+- units
+- mullvad-vpn-bin
+
+* Gaming
+
+enable multilib in ~/etc/pacman.conf~ by uncommenting or adding the
+following
+
+#+BEGIN_EXAMPLE
+  [multilib]
+  Include = /etc/pacman.d/mirrorlist
+#+END_EXAMPLE
+
+#+BEGIN_SRC sh
+  ln -s /mnt/games/steam-root .local/share/Steam
+  ln -s /mnt/games/wine .wine
+#+END_SRC
+
+** Packages
+
+- steam
+- vulkan-nouveau
+- lib32-vulkan-nouveau
+- /wine
+- wine-staging
+- wine-mono
+- winetricks
+
+#+BEGIN_SRC bash
+  VERSION_STRING=10-27
+  wget https://github.com/GloriousEggroll/proton-ge-custom/releases/download/GE-Proton${VERSION_STRING}/GE-Proton${VERSION_STRING}.tar.gz
+  tar xf GE-Proton${VERSION_STRING}.tar.gz -C ~/.steam/steam/compatibilitytools.d
+#+END_SRC
+
+decided to switch to nvidia
+- nvidia
+- nvidia-utils
+- nvidia-settings
+- lib32-nvidia-utils
+
+** Genshin
+
+didn't need any of these
+- flatpak
